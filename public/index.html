@@ -15,34 +15,73 @@
     <main>
       <section class="panel">
         <h2>Join a Room</h2>
+
         <div class="row">
           <label>Room Code</label>
           <input id="roomId" placeholder="CLASS1" />
         </div>
+
         <div class="row">
           <label>Your Name</label>
-          <input id="name" placeholder="Rita / Student Name" />
+          <input id="name" placeholder="Student Name" />
         </div>
+
+        <div class="row">
+          <label>Room Password / PIN</label>
+          <input id="pin" placeholder="1234" />
+        </div>
+
+        <div class="row inline">
+          <label class="inlineLabel">
+            <input type="checkbox" id="soundToggle" />
+            Sound
+          </label>
+        </div>
+
         <button id="joinBtn">Join</button>
         <div id="status" class="status"></div>
       </section>
 
-      <section class="panel" id="teacherPanel">
-        <h2>Teacher Setup</h2>
+      <section class="panel" id="teacherPanel" style="display:none;">
+        <h2>Teacher Controls</h2>
+
+        <div class="row">
+          <label>Set / Change Room PIN (optional)</label>
+          <div class="inlineRow">
+            <input id="teacherPin" placeholder="PIN" />
+            <button id="setPinBtn">Set PIN</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Turn Timer (seconds)</label>
+          <div class="inlineRow">
+            <input id="timerSeconds" type="number" min="5" max="120" value="20" />
+            <button id="setTimerBtn">Set Timer</button>
+          </div>
+        </div>
+
         <p class="help">
-          Enter pairs one per line as <b>front,match</b> (example: <b>7×8,56</b>).
-          Then click <b>Start / Reset Game</b>.
+          Enter pairs one per line as <b>front,match</b> (example: <b>7×8,56</b>). Students never see this list.
         </p>
+
         <textarea id="pairs" rows="7">7×8,56
 9×6,54
 12÷3,4</textarea>
-        <button id="startBtn">Start / Reset Game</button>
+
+        <div class="inlineRow">
+          <button id="startBtn">Start Game</button>
+          <button id="newRoundBtn">New Round</button>
+        </div>
       </section>
 
       <section class="panel boardPanel">
         <div class="boardHeader">
           <h2>Board</h2>
-          <div id="turnInfo" class="turn"></div>
+          <div class="turnWrap">
+            <div id="turnInfo" class="turn"></div>
+            <div id="timer" class="timer"></div>
+          </div>
         </div>
         <div id="board" class="board"></div>
       </section>
