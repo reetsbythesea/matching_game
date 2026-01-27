@@ -1,0 +1,34 @@
+:root { --bg:#0b0b10; --card:#151526; --text:#f3f3f7; --muted:#b8b8c7; --border:#2a2a44; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--text); }
+header { padding: 18px 22px; border-bottom: 1px solid var(--border); }
+h1 { margin:0; font-size: 24px; }
+.sub { margin-top: 6px; color: var(--muted); font-size: 14px; }
+main { display:grid; grid-template-columns: 320px 1fr; gap:14px; padding: 14px; align-items:start; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.panel h2 { margin:0 0 10px 0; font-size: 18px; }
+.row { display:grid; gap:6px; margin-bottom: 10px; }
+label { color: var(--muted); font-size: 13px; }
+input, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:#0f0f1a; color: var(--text); }
+textarea { resize: vertical; }
+button { padding:10px 12px; border-radius: 12px; border: 1px solid var(--border); background:#23234a; color:var(--text); font-weight:600; cursor:pointer; }
+button:disabled { opacity:0.5; cursor:not-allowed; }
+.status { margin-top: 8px; color: var(--muted); font-size: 13px; }
+.help { margin: 0 0 10px 0; color: var(--muted); font-size: 13px; line-height: 1.3; }
+
+.boardPanel { grid-column: 2 / 3; }
+.boardHeader { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.turn { color: var(--muted); font-size: 13px; }
+.board { display:flex; flex-wrap:wrap; gap: 10px; margin-top: 10px; }
+.card { width: 120px; height: 90px; font-size: 18px; background:#0f0f1a; border:1px solid var(--border); }
+.card[data-face="up"] { background:#ffffff; color:#111; border-color:#fff; }
+.players { display:grid; gap: 10px; }
+.player { border: 1px solid var(--border); border-radius: 12px; padding: 10px; background:#101023; }
+.playerTop { display:flex; justify-content:space-between; align-items:center; }
+.stackLabel { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.stack { margin: 6px 0 0 18px; padding:0; }
+.muted { color: var(--muted); }
+@media (max-width: 980px) {
+  main { grid-template-columns: 1fr; }
+  .boardPanel { grid-column: auto; }
+}
