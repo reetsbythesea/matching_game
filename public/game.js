@@ -1,5 +1,23 @@
 const socket = io();
 
+socket.on('connect_error', () => {
+  turnIndicatorEl.textContent = 'Connection error. Retrying...';
+});
+
+socket.on('disconnect', () => {
+  turnIndicatorEl.textContent = 'Disconnected. Reconnecting...';
+});
+
+socket.on('connect', () => {
+  if (roomId) {
+    socket.emit('game:join', { roomId }, response => {
+      if (response.error) {
+        turnIndicatorEl.textContent = `Error: ${response.error}`;
+      }
+    });
+  }
+});
+
 // Get room from URL
 const urlParams = new URLSearchParams(window.location.search);
 const roomId = urlParams.get('room');
@@ -22,6 +40,13 @@ function escapeHtml(str) {
 
 // Sound effects
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// Resume AudioContext on first user interaction (required by browsers)
+document.addEventListener('click', () => {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}, { once: true });
 
 function beep(freq = 440, ms = 120) {
   const o = audioCtx.createOscillator();
@@ -185,13 +210,7 @@ socket.on('room:error', e => {
   alert(e.message);
 });
 
-// Join room on load
-if (roomId) {
-  socket.emit('game:join', { roomId }, response => {
-    if (response.error) {
-      turnIndicatorEl.textContent = `Error: ${response.error}`;
-    }
-  });
-} else {
+// Show error if no room specified
+if (!roomId) {
   turnIndicatorEl.textContent = 'No room specified. Add ?room=CODE to URL.';
 }
