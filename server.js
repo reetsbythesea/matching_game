@@ -320,7 +320,9 @@ io.on("connection", (socket) => {
     });
 
     socket.join(roomId);
-    callback({ roomId });
+    if (typeof callback === 'function') {
+      callback({ roomId });
+    }
   });
 
   // Teacher sets roster (player names without socket connections)
@@ -330,7 +332,11 @@ io.on("connection", (socket) => {
     if (!r) return;
     if (r.hostId !== socket.id) return;
 
-    r.players = players.map((name, idx) => ({
+    // Validate players input
+    if (!Array.isArray(players)) return;
+    const validPlayers = players.slice(0, 50);
+
+    r.players = validPlayers.map((name, idx) => ({
       id: `player_${idx}`,
       name: safeName(name),
       score: 0,
@@ -383,11 +389,13 @@ io.on("connection", (socket) => {
 
   // Game screen joins room (view-only connection)
   socket.on("game:join", ({ roomId }, callback) => {
+    if (typeof callback !== 'function') return;
+
     const rid = sanitizeRoomId(roomId);
     const r = rooms.get(rid);
 
     if (!r) {
-      callback({ error: "Room not found" });
+      callback({ success: false, error: "Room not found" });
       return;
     }
 
