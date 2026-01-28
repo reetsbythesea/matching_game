@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,7 +19,7 @@
       <h2>Room Setup</h2>
 
       <div class="row">
-        <label>Room Code</label>
+        <label for="roomCode">Room Code</label>
         <div class="inlineRow">
           <input id="roomCode" placeholder="Auto-generated" readonly />
           <button id="createRoomBtn">Create Room</button>
@@ -27,7 +27,7 @@
       </div>
 
       <div class="row">
-        <label>Room PIN (optional)</label>
+        <label for="roomPin">Room PIN (optional)</label>
         <div class="inlineRow">
           <input id="roomPin" placeholder="1234" maxlength="12" />
           <button id="setPinBtn" disabled>Set PIN</button>
@@ -35,7 +35,7 @@
       </div>
 
       <div class="row">
-        <label>Turn Timer (seconds)</label>
+        <label for="turnTimer">Turn Timer (seconds)</label>
         <div class="inlineRow">
           <input id="turnTimer" type="number" min="5" max="120" value="20" />
           <button id="setTimerBtn" disabled>Set Timer</button>
@@ -52,25 +52,25 @@
       <h2>Word Decks</h2>
 
       <div class="row">
-        <label>Load Saved Deck</label>
+        <label for="deckSelect">Load Saved Deck</label>
         <div class="inlineRow">
           <select id="deckSelect">
             <option value="">-- Select deck --</option>
           </select>
-          <button id="loadDeckBtn">Load</button>
-          <button id="deleteDeckBtn" class="danger">Delete</button>
+          <button id="loadDeckBtn" aria-label="Load selected deck">Load</button>
+          <button id="deleteDeckBtn" class="danger" aria-label="Delete selected deck">Delete</button>
         </div>
       </div>
 
       <div class="row">
-        <label>Word Pairs (one per line: word,match)</label>
+        <label for="deckPairs">Word Pairs (one per line: word,match)</label>
         <textarea id="deckPairs" rows="8" placeholder="kite,kite
 tree,tree
 house,house"></textarea>
       </div>
 
       <div class="row">
-        <label>Save Deck As</label>
+        <label for="deckName">Save Deck As</label>
         <div class="inlineRow">
           <input id="deckName" placeholder="Sight Words Week 1" />
           <button id="saveDeckBtn">Save Deck</button>
@@ -83,25 +83,25 @@ house,house"></textarea>
       <h2>Student Roster</h2>
 
       <div class="row">
-        <label>Load Saved Roster</label>
+        <label for="rosterSelect">Load Saved Roster</label>
         <div class="inlineRow">
           <select id="rosterSelect">
             <option value="">-- Select roster --</option>
           </select>
-          <button id="loadRosterBtn">Load</button>
-          <button id="deleteRosterBtn" class="danger">Delete</button>
+          <button id="loadRosterBtn" aria-label="Load selected roster">Load</button>
+          <button id="deleteRosterBtn" class="danger" aria-label="Delete selected roster">Delete</button>
         </div>
       </div>
 
       <div class="row">
-        <label>Player Names (one per line)</label>
+        <label for="rosterNames">Player Names (one per line)</label>
         <textarea id="rosterNames" rows="6" placeholder="Scott
 Emma
 Jake"></textarea>
       </div>
 
       <div class="row">
-        <label>Save Roster As</label>
+        <label for="rosterName">Save Roster As</label>
         <div class="inlineRow">
           <input id="rosterName" placeholder="Period 2" />
           <button id="saveRosterBtn">Save Roster</button>
@@ -119,13 +119,13 @@ Jake"></textarea>
         <button id="newRoundBtn" disabled>New Round</button>
       </div>
 
-      <div id="gameStatus" class="status"></div>
+      <div id="gameStatus" class="status" aria-live="polite"></div>
     </section>
 
     <!-- Live Scoreboard -->
     <section class="panel">
       <h2>Live Scoreboard</h2>
-      <div id="scoreboard" class="scoreboard">
+      <div id="scoreboard" class="scoreboard" aria-live="polite">
         <div class="muted">No game in progress</div>
       </div>
     </section>
