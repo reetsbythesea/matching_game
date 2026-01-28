@@ -148,13 +148,11 @@ saveDeckBtn.onclick = () => {
   const decks = loadDecks();
   const existingIdx = decks.findIndex(d => d.name === name);
 
-  if (existingIdx >= 0) {
-    decks[existingIdx] = { name, pairs };
-  } else {
-    decks.push({ name, pairs });
-  }
+  const updatedDecks = existingIdx >= 0
+    ? decks.map((d, i) => i === existingIdx ? { name, pairs } : d)
+    : [...decks, { name, pairs }];
 
-  saveDecks(decks);
+  saveDecks(updatedDecks);
   populateDeckSelect();
   alert(`Deck "${name}" saved!`);
 };
@@ -169,8 +167,8 @@ deleteDeckBtn.onclick = () => {
 
   if (!confirm(`Delete deck "${deck.name}"?`)) return;
 
-  decks.splice(idx, 1);
-  saveDecks(decks);
+  const updatedDecks = decks.filter((_, i) => i !== parseInt(idx, 10));
+  saveDecks(updatedDecks);
   populateDeckSelect();
   el('deckPairs').value = '';
   el('deckName').value = '';
@@ -199,13 +197,11 @@ saveRosterBtn.onclick = () => {
   const rosters = loadRosters();
   const existingIdx = rosters.findIndex(r => r.name === name);
 
-  if (existingIdx >= 0) {
-    rosters[existingIdx] = { name, players };
-  } else {
-    rosters.push({ name, players });
-  }
+  const updatedRosters = existingIdx >= 0
+    ? rosters.map((r, i) => i === existingIdx ? { name, players } : r)
+    : [...rosters, { name, players }];
 
-  saveRosters(rosters);
+  saveRosters(updatedRosters);
   populateRosterSelect();
   alert(`Roster "${name}" saved!`);
 };
@@ -220,8 +216,8 @@ deleteRosterBtn.onclick = () => {
 
   if (!confirm(`Delete roster "${roster.name}"?`)) return;
 
-  rosters.splice(idx, 1);
-  saveRosters(rosters);
+  const updatedRosters = rosters.filter((_, i) => i !== parseInt(idx, 10));
+  saveRosters(updatedRosters);
   populateRosterSelect();
   el('rosterNames').value = '';
   el('rosterName').value = '';
