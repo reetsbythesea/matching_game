@@ -6,6 +6,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// Generate random room code
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 5; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 app.use(express.static("public"));
 
 /**
@@ -69,8 +79,10 @@ const emitRoom = (roomId) => {
     turnIndex: r.turnIndex,
     flipped: r.flipped,
     started: r.started,
+    paused: r.paused,
     turnSeconds: r.turnSeconds,
-    turnEndsAt: r.turnEndsAt
+    turnEndsAt: r.turnEndsAt,
+    pairsCount: r.pairsRaw ? r.pairsRaw.length : 0
   });
 };
 
@@ -118,6 +130,7 @@ io.on("connection", (socket) => {
         turnIndex: 0,
         flipped: [],
         started: false,
+        paused: false,
         pairsRaw: [],
         turnSeconds: 20,
         turnEndsAt: null
@@ -284,6 +297,113 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Teacher creates a new room
+  socket.on("room:create", (callback) => {
+    let roomId = generateRoomCode();
+    // Ensure unique
+    while (rooms.has(roomId)) {
+      roomId = generateRoomCode();
+    }
+
+    rooms.set(roomId, {
+      hostId: socket.id,
+      password: "",
+      players: [],
+      cards: [],
+      turnIndex: 0,
+      flipped: [],
+      started: false,
+      paused: false,
+      pairsRaw: [],
+      turnSeconds: 20,
+      turnEndsAt: null
+    });
+
+    socket.join(roomId);
+    if (typeof callback === 'function') {
+      callback({ roomId });
+    }
+  });
+
+  // Teacher sets roster (player names without socket connections)
+  socket.on("room:setRoster", ({ roomId, players }) => {
+    const rid = sanitizeRoomId(roomId);
+    const r = rooms.get(rid);
+    if (!r) return;
+    if (r.hostId !== socket.id) return;
+
+    // Validate players input
+    if (!Array.isArray(players)) return;
+    const validPlayers = players.slice(0, 50);
+
+    r.players = validPlayers.map((name, idx) => ({
+      id: `player_${idx}`,
+      name: safeName(name),
+      score: 0,
+      attempts: 0,
+      stack: []
+    }));
+
+    emitRoom(rid);
+  });
+
+  // Teacher sets deck
+  socket.on("room:setDeck", ({ roomId, pairs }) => {
+    const rid = sanitizeRoomId(roomId);
+    const r = rooms.get(rid);
+    if (!r) return;
+    if (r.hostId !== socket.id) return;
+
+    const cleanPairs = (pairs || [])
+      .map(p => ({ a: (p.a || "").toString().trim(), b: (p.b || "").toString().trim() }))
+      .filter(p => p.a && p.b);
+
+    r.pairsRaw = cleanPairs;
+    emitRoom(rid);
+  });
+
+  // Pause/resume game
+  socket.on("game:pause", ({ roomId }) => {
+    const rid = sanitizeRoomId(roomId);
+    const r = rooms.get(rid);
+    if (!r) return;
+    if (r.hostId !== socket.id) return;
+
+    r.paused = true;
+    r.turnEndsAt = null;
+    emitRoom(rid);
+  });
+
+  socket.on("game:resume", ({ roomId }) => {
+    const rid = sanitizeRoomId(roomId);
+    const r = rooms.get(rid);
+    if (!r) return;
+    if (r.hostId !== socket.id) return;
+
+    r.paused = false;
+    if (r.started) {
+      startTurnTimer(rid);
+    }
+    emitRoom(rid);
+  });
+
+  // Game screen joins room (view-only connection)
+  socket.on("game:join", ({ roomId }, callback) => {
+    if (typeof callback !== 'function') return;
+
+    const rid = sanitizeRoomId(roomId);
+    const r = rooms.get(rid);
+
+    if (!r) {
+      callback({ success: false, error: "Room not found" });
+      return;
+    }
+
+    socket.join(rid);
+    callback({ success: true });
+    emitRoom(rid);
+  });
+
   socket.on("disconnect", () => {
     for (const [rid, r] of rooms.entries()) {
       const before = r.players.length;
@@ -310,6 +430,7 @@ setInterval(() => {
   const now = Date.now();
   for (const [rid, r] of rooms.entries()) {
     if (!r.started) continue;
+    if (r.paused) continue;
     if (!r.players.length) continue;
     if (!r.turnEndsAt) continue;
 
