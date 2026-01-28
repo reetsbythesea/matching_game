@@ -14,7 +14,13 @@ function loadDecks() {
 
 // Save decks to localStorage
 function saveDecks(decks) {
-  localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+  try {
+    localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+    return true;
+  } catch (error) {
+    console.error('Failed to save decks:', error);
+    return false;
+  }
 }
 
 // Load rosters from localStorage
@@ -29,7 +35,13 @@ function loadRosters() {
 
 // Save rosters to localStorage
 function saveRosters(rosters) {
-  localStorage.setItem(ROSTERS_KEY, JSON.stringify(rosters));
+  try {
+    localStorage.setItem(ROSTERS_KEY, JSON.stringify(rosters));
+    return true;
+  } catch (error) {
+    console.error('Failed to save rosters:', error);
+    return false;
+  }
 }
 
 // Parse deck text into pairs array
@@ -56,6 +68,7 @@ function parseRoster(text) {
 // Populate deck dropdown
 function populateDeckSelect() {
   const select = document.getElementById('deckSelect');
+  if (!select) return;
   const decks = loadDecks();
 
   select.innerHTML = '<option value="">-- Select deck --</option>';
@@ -70,6 +83,7 @@ function populateDeckSelect() {
 // Populate roster dropdown
 function populateRosterSelect() {
   const select = document.getElementById('rosterSelect');
+  if (!select) return;
   const rosters = loadRosters();
 
   select.innerHTML = '<option value="">-- Select roster --</option>';
