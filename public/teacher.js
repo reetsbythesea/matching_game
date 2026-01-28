@@ -222,3 +222,120 @@ deleteRosterBtn.onclick = () => {
   el('rosterNames').value = '';
   el('rosterName').value = '';
 };
+
+// Socket.IO connection
+const socket = io();
+let currentRoom = null;
+let roomState = null;
+
+// Room creation
+createRoomBtn.onclick = () => {
+  socket.emit("room:create", (response) => {
+    if (response.roomId) {
+      currentRoom = response.roomId;
+      roomCodeEl.value = response.roomId;
+      roomInfoEl.textContent = `Room: ${response.roomId}`;
+
+      // Show game link
+      const gameUrl = `${window.location.origin}/game.html?room=${response.roomId}`;
+      gameLinkUrlEl.href = gameUrl;
+      gameLinkUrlEl.textContent = gameUrl;
+      gameLinkEl.classList.remove('hidden');
+
+      // Enable controls
+      setPinBtn.disabled = false;
+      setTimerBtn.disabled = false;
+      startGameBtn.disabled = false;
+
+      updateStatus('Room created! Set up your deck and roster.');
+    }
+  });
+};
+
+// Set PIN
+setPinBtn.onclick = () => {
+  if (!currentRoom) return;
+  const pin = el('roomPin').value.trim();
+  socket.emit("teacher:setPin", { roomId: currentRoom, pin });
+  updateStatus('PIN updated');
+};
+
+// Set timer
+setTimerBtn.onclick = () => {
+  if (!currentRoom) return;
+  const seconds = parseInt(el('turnTimer').value) || 20;
+  socket.emit("teacher:setTimer", { roomId: currentRoom, seconds });
+  updateStatus(`Turn timer set to ${seconds}s`);
+};
+
+// Start game
+startGameBtn.onclick = () => {
+  if (!currentRoom) return;
+
+  const pairs = parsePairs(el('deckPairs').value);
+  if (pairs.length < 2) return alert('Add at least 2 word pairs');
+
+  const players = parseRoster(el('rosterNames').value);
+  if (players.length < 1) return alert('Add at least 1 player');
+
+  // Set roster first, then deck, then start
+  socket.emit("room:setRoster", { roomId: currentRoom, players });
+  socket.emit("room:setDeck", { roomId: currentRoom, pairs });
+  socket.emit("game:start", { roomId: currentRoom, pairs });
+
+  pauseGameBtn.disabled = false;
+  newRoundBtn.disabled = false;
+  updateStatus('Game started!');
+};
+
+// Pause/resume
+pauseGameBtn.onclick = () => {
+  if (!currentRoom || !roomState) return;
+
+  if (roomState.paused) {
+    socket.emit("game:resume", { roomId: currentRoom });
+    pauseGameBtn.textContent = 'Pause';
+  } else {
+    socket.emit("game:pause", { roomId: currentRoom });
+    pauseGameBtn.textContent = 'Resume';
+  }
+};
+
+// New round
+newRoundBtn.onclick = () => {
+  if (!currentRoom) return;
+  socket.emit("game:newRound", { roomId: currentRoom });
+  updateStatus('New round started!');
+};
+
+// Room updates
+socket.on("room:update", (data) => {
+  roomState = data;
+  renderScoreboard(data);
+
+  if (data.paused) {
+    pauseGameBtn.textContent = 'Resume';
+  } else {
+    pauseGameBtn.textContent = 'Pause';
+  }
+});
+
+// Render scoreboard
+function renderScoreboard(room) {
+  if (!room || !room.players.length) {
+    scoreboardEl.innerHTML = '<div class="muted">No players yet</div>';
+    return;
+  }
+
+  scoreboardEl.innerHTML = room.players.map((p, idx) => `
+    <div class="scoreItem ${idx === room.turnIndex && room.started ? 'active' : ''}">
+      <span class="name">${p.name}${idx === room.turnIndex && room.started ? ' ⭐' : ''}</span>
+      <span class="points">${p.score} pts</span>
+    </div>
+  `).join('');
+}
+
+// Status updates
+function updateStatus(msg) {
+  gameStatusEl.textContent = msg;
+}
