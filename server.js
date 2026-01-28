@@ -30,6 +30,7 @@ app.use(express.static("public"));
  *  pairsRaw: [{a,b}],
  *  turnSeconds: number,
  *  turnEndsAt: number|null
+ *  gameScreens: Set<socketId> // sockets that joined via game:join (can flip cards)
  * }
  */
 const rooms = new Map();
@@ -133,7 +134,8 @@ io.on("connection", (socket) => {
         paused: false,
         pairsRaw: [],
         turnSeconds: 20,
-        turnEndsAt: null
+        turnEndsAt: null,
+        gameScreens: new Set()
       });
     }
 
@@ -236,9 +238,15 @@ io.on("connection", (socket) => {
     const rid = sanitizeRoomId(roomId);
     const r = rooms.get(rid);
     if (!r || !r.started) return;
+    if (r.paused) return;
 
     const current = r.players[r.turnIndex];
-    if (!current || current.id !== socket.id) return;
+    if (!current) return;
+
+    // Allow flip if: socket is a game screen OR socket is the current player
+    const isGameScreen = r.gameScreens.has(socket.id);
+    const isCurrentPlayer = current.id === socket.id;
+    if (!isGameScreen && !isCurrentPlayer) return;
 
     const card = r.cards.find((c) => c.id === cardId);
     if (!card || card.isMatched || card.isFaceUp) return;
@@ -316,7 +324,8 @@ io.on("connection", (socket) => {
       paused: false,
       pairsRaw: [],
       turnSeconds: 20,
-      turnEndsAt: null
+      turnEndsAt: null,
+      gameScreens: new Set()
     });
 
     socket.join(roomId);
@@ -400,12 +409,16 @@ io.on("connection", (socket) => {
     }
 
     socket.join(rid);
+    r.gameScreens.add(socket.id);
     callback({ success: true });
     emitRoom(rid);
   });
 
   socket.on("disconnect", () => {
     for (const [rid, r] of rooms.entries()) {
+      // Clean up game screen tracking
+      r.gameScreens.delete(socket.id);
+
       const before = r.players.length;
       r.players = r.players.filter((p) => p.id !== socket.id);
 
