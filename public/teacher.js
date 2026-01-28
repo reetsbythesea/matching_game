@@ -104,6 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // DOM elements
 const el = id => document.getElementById(id);
 
+// Escape HTML to prevent XSS
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 const roomCodeEl = el('roomCode');
 const roomInfoEl = el('roomInfo');
 const gameLinkEl = el('gameLink');
@@ -225,6 +232,23 @@ deleteRosterBtn.onclick = () => {
 
 // Socket.IO connection
 const socket = io();
+
+socket.on('connect', () => {
+  updateStatus('Connected to server');
+});
+
+socket.on('disconnect', () => {
+  updateStatus('Disconnected from server - reconnecting...');
+});
+
+socket.on('connect_error', (error) => {
+  updateStatus('Connection error');
+});
+
+socket.on('room:error', (data) => {
+  alert(data.message || 'An error occurred');
+});
+
 let currentRoom = null;
 let roomState = null;
 
@@ -329,7 +353,7 @@ function renderScoreboard(room) {
 
   scoreboardEl.innerHTML = room.players.map((p, idx) => `
     <div class="scoreItem ${idx === room.turnIndex && room.started ? 'active' : ''}">
-      <span class="name">${p.name}${idx === room.turnIndex && room.started ? ' ⭐' : ''}</span>
+      <span class="name">${escapeHtml(p.name)}${idx === room.turnIndex && room.started ? ' (current)' : ''}</span>
       <span class="points">${p.score} pts</span>
     </div>
   `).join('');
